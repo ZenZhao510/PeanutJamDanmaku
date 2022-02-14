@@ -1,0 +1,157 @@
+#TouhouDanmakufu[Single]
+#ScriptVersion[3]
+#Title["Spell Card 1"]
+#Text["This is the first spell card"]
+
+#include "script/default_system/Default_ShotConst.txt"
+
+// declares boss variable
+let objBoss;
+// declares scene
+let objScene = GetEnemyBossSceneObjectID();
+
+@Initialize {
+    // initializes boss variable and registers as enemy
+    objBoss = ObjEnemy_Create(OBJ_ENEMY_BOSS);
+    ObjEnemy_Regist(objBoss);
+
+    // moves boss to centerX of frame, 60 from top
+    ObjMove_SetDestAtFrame(objBoss, getCenterX(), 60, 60);
+
+    ObjEnemyBossScene_StartSpell(objScene);
+    
+    bossRender;
+    endSpell;
+    spellCard;
+    // movement;
+}
+
+@Event {
+    alternative(GetEventType())
+    case(EV_REQUEST_LIFE){
+        SetScriptResult(8000);
+    }
+    case(EV_REQUEST_TIMER){
+        SetScriptResult(60);
+    }
+    case(EV_REQUEST_SPELL_SCORE){
+        SetScriptResult(1000000);
+    }
+}
+
+@MainLoop {
+    ObjEnemy_SetIntersectionCircleToShot(objBoss, ObjMove_GetX(objBoss), ObjMove_GetY(objBoss), 32);
+    ObjEnemy_SetIntersectionCircleToPlayer(objBoss, ObjMove_GetX(objBoss), ObjMove_GetY(objBoss), 24);
+    yield;
+}
+
+task bossRender {
+    // sets boss texture and spawns them on frame
+    let imgBoss = GetCurrentScriptDirectory() ~ "unnamedCardDealer.png";
+    ObjPrim_SetTexture(objBoss, imgBoss);
+    ObjSprite2D_SetSourceRect(objBoss, 0, 0, 80, 80);
+    ObjSprite2D_SetDestCenter(objBoss);
+}
+
+task endSpell {
+    // checks spell card life, yields if over 0 (if spell card hasn't finished)
+    while (ObjEnemy_GetInfo(objBoss, INFO_LIFE) > 0) {
+        yield;
+    }
+    // add spell card bonus to score after spell card ends
+    if (ObjEnemyBossScene_GetInfo(objScene, INFO_PLAYER_SHOOTDOWN_COUNT)+ObjEnemyBossScene_GetInfo(objScene, INFO_PLAYER_SHOOTDOWN_COUNT) == 0) {
+        AddScore(ObjEnemyBossScene_GetInfo(objScene, INFO_SPELL_SCORE));
+    }
+    Obj_Delete(objBoss);
+    DeleteShotAll(TYPE_ALL, TYPE_IMMEDIATE);
+    CloseScript(GetOwnScriptID());
+    return;
+}
+
+task spellCard {
+    fireA;
+    // fireB;
+    // fireC;
+    // fireD;
+    fireBoWaP;
+}
+
+task fireA {
+    while (ObjEnemy_GetInfo(objBoss, INFO_LIFE) > 0) {
+        let angleT = GetAngleToPlayer(objBoss);
+        loop (6) {
+            ascent (i in 0..4) {
+                CreateShotA1(ObjMove_GetX(objBoss), ObjMove_GetY(objBoss), 2.5 - i / 3, angleT - i * 10, 145 + 2 * i, 10); 
+            }
+            angleT += 60;
+        }
+        wait(120);
+    }
+}
+
+task fireC {
+    while (ObjEnemy_GetInfo(objBoss, INFO_LIFE) > 0) {
+        let angleT = GetAngleToPlayer(objBoss);
+        ascent (i in -9..10) {
+            ascent (j in 0..5) {
+                let obj = CreateShotA1(getCenterX(), 10, 3 - j / 4, angleT + i * 6, 235 + j, 30);
+                homingAfter(obj, 100);
+            }
+        }
+        wait(240);
+    }
+}
+
+task fireD {
+    while (ObjEnemy_GetInfo(objBoss, INFO_LIFE) > 0) {
+        let angleT = 90;
+        loop (12) {
+            let angleU = angleT;
+            loop (4) {
+                CreateShotA1(ObjMove_GetX(objBoss), ObjMove_GetY(objBoss), 2, angleU, 210, 5);
+                angleU += 90;
+                if (angleU >= 360) {
+                    angleU -= 360;
+                }
+            }
+            angleT += 15;
+            wait(15);
+        }
+    }
+}
+
+task fireBoWaP{	
+    let angleT = rand(0, 360);
+    let objcount = 0;
+    loop {	
+        loop(4) {
+            let obj = CreateShotA1(ObjMove_GetX(objBoss), ObjMove_GetY(objBoss), 2, angleT, 1, 5);
+            angleT += 90;
+        }
+        angleT += sin(2 * objcount) * 20; 
+        objcount++;
+        yield;
+        }
+    }
+
+task homingAfter(obj, n) {
+    wait(n);
+    ObjMove_SetAngle(obj, GetAngleToPlayer(obj));
+}
+
+// wait function for tasks
+function wait(n) {
+    loop (n) {
+        yield;
+    }
+}
+
+// gets center x coord of frame
+function getCenterX() {
+    return GetStgFrameWidth() / 2;
+}
+
+//gets center y coord of frame
+function getCenterY() {
+    return GetStgFrameHeight() / 2;
+}
