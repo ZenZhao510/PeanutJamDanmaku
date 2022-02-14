@@ -22,6 +22,8 @@ task plural{
     let obj = ObjEnemyBossScene_Create();
     ObjEnemyBossScene_Add(obj, 0, dir ~ "./nonspell1.txt");
     ObjEnemyBossScene_Add(obj, 0, dir ~ "./spell1.txt");
+    ObjEnemyBossScene_Add(obj, 0, dir ~ "./nonspell2.txt");
+    ObjEnemyBossScene_Add(obj, 0, dir ~ "./spell2.txt");
     ObjEnemyBossScene_LoadInThread(obj);
     ObjEnemyBossScene_Regist(obj);
     while (!Obj_IsDeleted(obj)) {
